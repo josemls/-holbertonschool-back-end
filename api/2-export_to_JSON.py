@@ -1,34 +1,47 @@
 #!/usr/bin/python3
-"""Gather data from an API."""
-
-
-import requests
-import sys
-import json
-
+""" Console Module """
+"""
+Pythin script that uses this  rest api for given
+employee ID to return info about his/her todo list progress
+"""
 if __name__ == '__main__':
+    import csv
+    import json
+    from requests import get
+    from sys import argv
+    """this module is fucking documented"""
 
-    emp_id = sys.argv[1]
+    employee_ID = argv[1]
+    all_todos = get(f'https://jsonplaceholder.typicode.com/todos')
+    users = get(f'https://jsonplaceholder.typicode.com/users')
 
-    api_url = "https://jsonplaceholder.typicode.com"
+    employee_list = json.loads(all_todos.text)
+    users = json.loads(users.text)
+    for user in users:
+        if user.get('id') == int(employee_ID):
+            employee_name = user.get('username')
 
-    url = f"{api_url}/users/{emp_id}/todos"
-    resp = requests.get(url)
-    emp_tasks = resp.json()
+    task_count = 0
+    task_list = []
+    task_success = []
+    for employee in employee_list:
+        if employee.get('userId') == int(employee_ID):
+            task_count += 1
+            task_list.append(employee['title'])
+            task_success.append(employee['completed'])
 
-    url = f"{api_url}/users/{emp_id}"
-    resp = requests.get(url)
-    emp_info = resp.json()
+    json_list = []
+    employee_id = str(employee_ID)
+    THE_dict = {}
+    for i in range(len(task_list)):
+        true_or_false = bool(task_success[i])
+        task = f'{task_list[i]}'
+        name = employee_name
+        every_dict = ({'task': task,
+                       'completed': true_or_false,
+                       'username': name})
+        json_list.append(every_dict)
+    THE_dict[employee_id] = json_list
 
-    emp_todos = [
-        {
-            'task': task.get('title'),
-            'completed': task.get('completed'),
-            'username': emp_info.get('username'),
-        }
-        for task in emp_tasks
-    ]
-    output_json = {emp_id: emp_todos}
-
-    with open(f"{emp_id}.json", mode="w") as f:
-        json.dump(output_json, f)
+    with open(f'{employee_ID}.json', 'w') as f:
+        json.dump(THE_dict, f)
