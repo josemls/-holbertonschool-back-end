@@ -1,40 +1,36 @@
 #!/usr/bin/python3
 """api"""
-import requests
-import sys
+if __name__ == '__main__':
+    import json
+    from requests import get
+    from sys import argv
+    """this module is fucking documented"""
 
+    employee_ID = argv[1]
+    all_todos = get(f'https://jsonplaceholder.typicode.com/todos')
+    users = get(f'https://jsonplaceholder.typicode.com/users')
 
-if __name__ == "__main__":
-    if len(sys.argv) == 2:
-        id = int(sys.argv[1])
+    employee_list = json.loads(all_todos.text)
+    users = json.loads(users.text)
+    for user in users:
+        if user.get('id') == int(employee_ID):
+            employee_name = user.get('name')
 
-    url = "https://jsonplaceholder.typicode.com/"
-    employee_name = ""
-    try:
-        response_users = requests.request("GET", "{}users/{}".format(url, id))
-        response_tasks = requests.request("GET", "{}todos/".format(url))
-        employee_name = response_users.json()["name"]
+    completed_task = 0
+    task_count = 0
+    task_list = []
+    for employee in employee_list:
+        if employee.get('userId') == int(employee_ID):
+            task_count += 1
+            if employee.get('completed') is True:
+                completed_task += 1
+                task_list.append(employee['title'])
 
-    except KeyError:
-        pass
+    firstline = (
+        f'Employee {employee_name} is done'
+        f' with tasks({completed_task}/{task_count}):'
+    )
+    print(firstline)
 
-    total_number_of_tasks = len(response_tasks.json())
-    total_number_of_undone_tasks = 0
-    total_number_of_done_task = 0
-
-    for i in range(total_number_of_tasks):
-        if response_tasks.json()[i]['userId'] == id:
-            if response_tasks.json()[i]['completed']:
-                total_number_of_done_task += 1
-            elif response_tasks.json()[i]['completed'] is False:
-                total_number_of_undone_tasks += 1
-
-    total_number_of_done_or_undone_tasks = total_number_of_undone_tasks + \
-        total_number_of_done_task
-    print("Employee {} is done with tasks({}/{}):".format(employee_name,
-          total_number_of_done_task, total_number_of_done_or_undone_tasks))
-    for i in range(total_number_of_tasks):
-        if response_tasks.json()[i]['userId'] == id:
-            if response_tasks.json()[i]['completed']:
-
-                print("\t" + " " + response_tasks.json()[i]['title'])
+    for task in task_list:
+        print(f'\t {task}')
